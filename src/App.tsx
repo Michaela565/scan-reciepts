@@ -10,6 +10,8 @@ import { supabase } from "./lib/supabase";
 function App() {
     const [receipt, setReceipt] = useState<ParsedReceipt | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
 
     const session = useSession();
 
@@ -30,6 +32,21 @@ function App() {
         }
     }
 
+    async function handleSaveReceipt() {
+        if (!receipt) return;
+        setSaving(true);
+        const payload = {
+            ...receipt,
+            purchasedAt: new Date(receipt.purchasedAt!).toISOString(),
+        };
+        const { error } = await supabase.rpc("save_receipt", {
+            p_receipt: payload,
+        });
+        if (error) setError(error.message);
+        setSaving(false);
+        setSaved(true);
+    }
+
     return (
         <main>
             <button onClick={() => supabase.auth.signOut()}>Sign out</button>
@@ -48,53 +65,68 @@ function App() {
             )}
 
             {receipt && (
-                <section>
-                    <p className="meta">
-                        {receipt.chain} · {receipt.storeName ?? "unknown store"}
-                        {receipt.purchasedAt &&
-                            ` · ${new Date(receipt.purchasedAt).toLocaleString("cs-CZ")}`}
-                    </p>
-                    {receipt.warnings.map((w) => (
-                        <p key={w} className="warning">
-                            ⚠ {w}
+                <>
+                    <section>
+                        <p className="meta">
+                            {receipt.chain} ·{" "}
+                            {receipt.storeName ?? "unknown store"}
+                            {receipt.purchasedAt &&
+                                ` · ${new Date(receipt.purchasedAt).toLocaleString("cs-CZ")}`}
                         </p>
-                    ))}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Unit price</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {receipt.items.map((item, i) => (
-                                <tr key={i}>
-                                    <td>{item.name}</td>
-                                    <td>
-                                        {item.quantity}
-                                        {item.unit && ` ${item.unit}`}
-                                    </td>
-                                    <td>{formatCzk(item.unitPrice)}</td>
-                                    <td>{formatCzk(item.total)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colSpan={3}>Celkem</td>
-                                <td>{formatCzk(receipt.total)}</td>
-                            </tr>
-                            {receipt.savings !== undefined && (
+                        {receipt.warnings.map((w) => (
+                            <p key={w} className="warning">
+                                ⚠ {w}
+                            </p>
+                        ))}
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colSpan={3}>Saved by promotions</td>
-                                    <td>{formatCzk(receipt.savings)}</td>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Unit price</th>
+                                    <th>Total</th>
                                 </tr>
-                            )}
-                        </tfoot>
-                    </table>
-                </section>
+                            </thead>
+                            <tbody>
+                                {receipt.items.map((item, i) => (
+                                    <tr key={i}>
+                                        <td>{item.name}</td>
+                                        <td>
+                                            {item.quantity}
+                                            {item.unit && ` ${item.unit}`}
+                                        </td>
+                                        <td>{formatCzk(item.unitPrice)}</td>
+                                        <td>{formatCzk(item.total)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colSpan={3}>Celkem</td>
+                                    <td>{formatCzk(receipt.total)}</td>
+                                </tr>
+                                {receipt.savings !== undefined && (
+                                    <tr>
+                                        <td colSpan={3}>Saved by promotions</td>
+                                        <td>{formatCzk(receipt.savings)}</td>
+                                    </tr>
+                                )}
+                            </tfoot>
+                        </table>
+                    </section>
+                    <button
+                        onClick={handleSaveReceipt}
+                        disabled={
+                            saving || saved || receipt.warnings.length > 0
+                        }
+                    >
+                        {saved
+                            ? "Saved receipt"
+                            : saving
+                              ? "Saving receipt"
+                              : "Save receipt"}
+                    </button>
+                </>
             )}
         </main>
     );
