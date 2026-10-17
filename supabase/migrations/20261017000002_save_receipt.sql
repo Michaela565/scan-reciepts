@@ -1,12 +1,13 @@
 create function save_receipt(p_receipt jsonb)
-returns bigint                      -- the new receipt_id
+returns bigint  -- the new receipt_id
 language plpgsql
-as $$                               -- $$ … $$ is just a way to quote the function body
+as $$
 declare
-    v_store_id   bigint;              -- variables: name, type
+    v_store_id   bigint;
     v_receipt_id bigint;
     v_item       jsonb;
-    v_user_id bigint;
+    v_user_id uuid;
+    v_store_item_id bigint;
 begin
     v_user_id := auth.uid();
     if v_user_id is null then
@@ -34,11 +35,24 @@ begin
 
  
     for v_item in select * from jsonb_array_elements(p_receipt->'items') loop
-        -- TODO:
-        -- 1. find or create the store_item
-        -- 2. insert the reciept_item
+        -- find or create the store_item
+        insert into store_item (user_id, chain, name)
+        values (v_user_id, p_receipt->>'chain', v_item->>'name')
+        on conflict (user_id, chain, name) do nothing;
+
+        select store_item_id into v_store_item_id
+        from store_item
+        where user_id = v_user_id 
+          and chain = p_receipt->>'chain' 
+          and name = v_item->>'name';
+        -- insert the receipt_item
+        insert into receipt_item (store_item_id, receipt_id, quantity, unit_price)
+        values (v_store_item_id, v_receipt_id, (v_item->>'quantity')::numeric, (v_item->>'unitPrice')::integer);
+
     end loop;
 
     return v_receipt_id;
 end;
 $$;
+revoke execute on function save_receipt(jsonb) from public, anon;
+grant execute on function save_receipt(jsonb) to authenticated;
