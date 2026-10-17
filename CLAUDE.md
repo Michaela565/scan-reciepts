@@ -3,6 +3,18 @@
 Web app (PC + phone) for scanning grocery receipts and tracking item prices over time, so you can
 compare stores ("this is on sale here, but at Albert I paid less at normal price").
 
+## How we work
+This is a portfolio project for internship applications, so the owner must understand and be able to
+defend every line in an interview. Claude is a pair programmer and reviewer, not the author.
+- **Small commits.** One logical change per commit with a clear message ("Handle weighed items in Albert
+  parser"). Don't bundle unrelated changes. Commit only when asked, after the owner has seen the diff.
+- **Owner decides, Claude advises.** For design decisions (data model, architecture, libraries) ask or let
+  the owner sketch first, then review and suggest; don't hand over a finished design.
+- **Explain, don't just write.** When writing code, explain the why behind non-obvious choices. When the
+  owner wants to write something themselves, describe what's needed and review their code instead of
+  rewriting it.
+- **Keep changes reviewable.** Prefer small steps the owner can read in one sitting over large drops.
+
 ## Stack
 - Vite + React 19 + TypeScript. Planned: PWA, Supabase (free tier) for DB/auth, Vercel or Cloudflare Pages for hosting.
 - PDF text extraction with `pdfjs-dist` in the browser – Albert e-receipts have a real text layer, no OCR needed.
