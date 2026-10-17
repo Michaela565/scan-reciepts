@@ -1,0 +1,52 @@
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.drop {
+  display: block;
+  padding: 24px 16px;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.drop input {
+  display: block;
+  margin: 12px auto 0;
+  max-width: 100%;
+}
+
+.meta {
+  color: var(--muted);
+}
+
+.warning {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--warning-bg);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+th, td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+th:not(:first-child), td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+tfoot td {
+  font-weight: 600;
+  border-bottom: none;
+}
